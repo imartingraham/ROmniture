@@ -89,7 +89,7 @@ module ROmniture
 
 			request.url = URL << '?' << @params.to_query
 
-			puts HTTPI.post(request)
+			HTTPI.post(request)
 
 		end
 
