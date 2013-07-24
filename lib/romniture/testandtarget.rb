@@ -19,7 +19,7 @@ module ROmniture
 			params = { :operation => 'campaignList' }
 
 
-			if !labels
+			if labels.nil?
 				params[:labels] = 'AN Campaign, A/B...N, Live in Last 7 Days, Approved'
 			else
 				params[:labels] = labels
@@ -82,12 +82,10 @@ module ROmniture
 
 		def send_request(params)
 			log(Logger::INFO, "Requesting #{params[:operation]}")
-			@params.merge(params)
+			merged_params = @params.merge(params)
 
 			request = HTTPI::Request.new
-
-
-			request.url = URL << '?' << @params.to_query
+			request.url = URL << '?' << merged_params.to_query
 
 			HTTPI.post(request)
 
