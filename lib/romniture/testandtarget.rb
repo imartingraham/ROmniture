@@ -15,13 +15,11 @@ module ROmniture
 			HTTPI.log = false
 		end
 
-		def get_campaign_list(labels = nil)
-			params = { :operation => 'campaignList' }
+		def get_campaign_list(state = 'activated', labels = nil)
+			params = { :operation => 'campaignList', :state => state }
 
 
-			if labels.nil?
-				params[:labels] = 'AN Campaign, A/B...N, Live in Last 7 Days, Approved'
-			else
+			if !labels.nil?
 				params[:labels] = labels
 			end
 
@@ -30,6 +28,7 @@ module ROmniture
 		end
 
 		def get_campaign(id, start_date = nil, end_date = nil )
+			params = {}
 			if start_date.nil?
 				start_date = 6.months.ago
 			end
@@ -41,7 +40,7 @@ module ROmniture
 			params[:operation] = 'viewCampaign'
 			params[:id] = id
 
-			send_request
+			send_request params
 
 		end
 
@@ -49,8 +48,9 @@ module ROmniture
 			params = {
 				:resolution => 'day',
 				:operation => 'report',
-				:type => 'visotor',
+				:type => 'visitor',
 				:start => start_date,
+				:campaignId => campaign_id,
 				:end => end_date,
 				:filterExtremeOrders => true
 			}
@@ -58,9 +58,7 @@ module ROmniture
 			if !segment.nil?
 				params[:segment] = segment
 			end
-
 			send_request params
-
 		end
 
     attr_writer :log
@@ -81,14 +79,17 @@ module ROmniture
 		private 
 
 		def send_request(params)
-			log(Logger::INFO, "Requesting #{params[:operation]}")
-			merged_params = @params.merge(params)
-
-			request = HTTPI::Request.new
-			request.url = URL << '?' << merged_params.to_query
-
-			HTTPI.post(request)
-
+			begin
+				log(Logger::INFO, "Requesting #{params[:operation]}")
+				default_params = @params.clone
+				merged_params = default_params.merge(params)
+				request = HTTPI::Request.new(url:"#{URL}?#{merged_params.to_query}", open_timeout: 120, read_timeout: 120)
+				puts request.url
+				response = HTTPI.post(request)
+				return response
+			rescue Timeout::Error => e
+				raise
+			end
 		end
 
 	end
