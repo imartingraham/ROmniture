@@ -39,6 +39,8 @@ module ROmniture
 
 			params[:operation] = 'viewCampaign'
 			params[:id] = id
+			params[:start] = start_date
+			params[:end] = end_date
 
 			send_request params
 
@@ -61,7 +63,26 @@ module ROmniture
 			send_request params
 		end
 
-    attr_writer :log
+		def get_campaign_audit(campaign_id, start_date = nil, end_date = nil)
+			params = {}
+			if start_date.nil?
+				start_date = 6.months.ago
+			end
+
+			if end_date.nil?
+				end_date  = Date.tomorrow
+			end
+			params[:start] = start_date.strftime('%Y-%m-%d')
+			params[:end] = end_date.strftime('%Y-%m-%d')
+			params[:operation] = :auditReport
+			params[:campaignId] = campaign_id
+			params[:format] = 'csv'
+
+			send_request params
+
+		end
+
+		attr_writer :log
 
 		def log?
 			!@log != false
